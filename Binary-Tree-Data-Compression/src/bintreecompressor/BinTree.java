@@ -19,34 +19,52 @@ public class BinTree {
             throw new IllegalArgumentException("Invalid argument!");
         }
 
-        if (isPrefixorEqual(a)) { // TODO: abolish this and check during construction
-            throw new IllegalArgumentException("Prefix condition violated!");
-        }
+        // if (isPrefixorEqual(a)) { // commented bc faster check implemented
+        //     throw new IllegalArgumentException("Prefix condition violated!");
+        // }
 
         root = new TNode(null, null, null);
         for (int i = 0; i < a.length; i++) {
-            if (!a[i].matches("[01]+")) { // regex for binary string
+            // if (!a[i].matches("[01]+")) { // regex for binary string (commented due to faster check implemented)
+            //     throw new IllegalArgumentException("Invalid argument!");
+            // }
+            if (a[i].length() == 0) { // empty string
                 throw new IllegalArgumentException("Invalid argument!");
             }
             TNode current = root;
             for (int j = 0; j < a[i].length(); j++) {
+                if (current != null && current.data != null) { // prefix condition violated
+                    throw new IllegalArgumentException("Prefix condition violated!");
+                }
                 if (a[i].charAt(j) == '0') {
                     if (current.left == null) { // create new node if null, else traverse
                         current.left = new TNode(null, null, null);
                     }
                     current = current.left;
-                } else {  // a[i].charAt(j) == '1'
+                } else if (a[i].charAt(j) == '1') {  
                     if (current.right == null) { // create new node if null, else traverse
                         current.right = new TNode(null, null, null);
                     }
                     current = current.right;
                 }
+                else { // invalid character
+                    throw new IllegalArgumentException("Invalid argument!");
+                }
             }
-            if (current.data != null) { // prefix condition violated
+            if (current.data != null) {
                 throw new IllegalArgumentException("Prefix condition violated!");
             }
             current.data = "c" + i;
         }
+    }
+
+    public void optimize() {
+        /* If the tree is not a full binary tree (i.e., where each
+        internal node has two children), the lengths of some codewords can be reduced by
+        removing some bits, while the prefix-free condition is maintained. This method
+        checks if the tree is full and if it is not, it performs these changes (i.e., it reduced
+        codewords and adapts the tree) until the tree becomes full. */
+        return;
     }
 
     private Boolean isPrefixorEqual(String[] a) {
