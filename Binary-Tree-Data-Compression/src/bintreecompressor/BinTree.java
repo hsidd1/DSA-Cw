@@ -1,5 +1,7 @@
 package bintreecompressor;
 
+import java.util.ArrayList;
+
 public class BinTree {
     private TNode root;
 
@@ -19,10 +21,6 @@ public class BinTree {
             throw new IllegalArgumentException("Invalid argument!");
         }
 
-        // if (isPrefixorEqual(a)) { // commented bc faster check implemented
-        //     throw new IllegalArgumentException("Prefix condition violated!");
-        // }
-
         root = new TNode(null, null, null);
         for (int i = 0; i < a.length; i++) {
             // if (!a[i].matches("[01]+")) { // regex for binary string (commented due to faster check implemented)
@@ -33,7 +31,7 @@ public class BinTree {
             }
             TNode current = root;
             for (int j = 0; j < a[i].length(); j++) {
-                if (current != null && current.data != null) { // prefix condition violated
+                if (current != null && current.data != null) { // non leaf node with data
                     throw new IllegalArgumentException("Prefix condition violated!");
                 }
                 if (a[i].charAt(j) == '0') {
@@ -51,7 +49,8 @@ public class BinTree {
                     throw new IllegalArgumentException("Invalid argument!");
                 }
             }
-            if (current.data != null) {
+            if (current.data != null || current.left != null || current.right != null) {
+                // child exists: path has been traversed before (prefix), if current node has data: duplicate
                 throw new IllegalArgumentException("Prefix condition violated!");
             }
             current.data = "c" + i;
@@ -67,18 +66,13 @@ public class BinTree {
         return;
     }
 
-    private Boolean isPrefixorEqual(String[] a) {
-        /*
-         * returns true if any element in the array is a prefix of another element, false otherwise.
-         */
-        for (int i = 0; i < a.length; i++) {
-            for (int j = 0; j < a.length && j != i; j++) {
-                if (a[i].startsWith(a[j])) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public ArrayList<String> getCodewords() {
+        /* returns an ArrayList<String>
+        object that stores the codewords in lexicographical order1. Each item in the list is
+        a codeword (a string of 0’s and 1’s). */
+        ArrayList<String> codewords = new ArrayList<String>();
+        return codewords; // TODO 
+
     }
 
     public void printTree() {
