@@ -1,5 +1,6 @@
 package bintreecompressor;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class BinTree {
@@ -30,6 +31,7 @@ public class BinTree {
                 throw new IllegalArgumentException("Invalid argument!");
             }
             TNode current = root;
+
             for (int j = 0; j < a[i].length(); j++) {
                 if (current != null && current.data != null) { // non leaf node with data
                     throw new IllegalArgumentException("Prefix condition violated!");
@@ -67,12 +69,111 @@ public class BinTree {
     }
 
     public ArrayList<String> getCodewords() {
-        /* returns an ArrayList<String>
-        object that stores the codewords in lexicographical order1. Each item in the list is
-        a codeword (a string of 0’s and 1’s). */
-        ArrayList<String> codewords = new ArrayList<String>();
-        return codewords; // TODO 
+        /* returns an ArrayList<String> object that stores the codewords in lexicographical order1. 
+        Each item in the list is a codeword (a string of 0’s and 1’s). */
+        ArrayList<String> codeWordsArray = new ArrayList<String>();
+        lexicographicalTraversal(root, "", codeWordsArray);
+        return codeWordsArray;
+    }
 
+    private void lexicographicalTraversal(TNode current, String codeWordString, ArrayList<String> codeWordsArray) {
+        /* inorder lexicographical traversal modifying array of codewords from input tree root
+         * Wrapped by getCodewords()
+         */
+        if (current != null) {
+            // Left, Root, Right
+            lexicographicalTraversal(current.left, codeWordString + "0", codeWordsArray); // 0s for left
+
+            if (current.data != null) { // add codeword if leaf
+                codeWordsArray.add(codeWordString);
+            }
+
+            lexicographicalTraversal(current.right, codeWordString + "1", codeWordsArray); // 1s for right
+        }
+    }
+
+    // public int getTreeSize() {
+    //     /* getter for treeSize (number of nodes in the tree) */
+    //     return treeSize(root);
+    // }
+    // private int treeSize(TNode current) {
+    //     /* returns the number of nodes in the tree. */
+    //     if (current == null) {
+    //         return 0;
+    //     }
+    //     return 1 + treeSize(current.left) + treeSize(current.right);
+    // }
+
+    private int treeHeight(TNode current) {
+        /* returns the height of the tree. */
+        if (current == null) {
+            return 0;
+        }
+        return 1 + Math.max(treeHeight(current.left), treeHeight(current.right));
+    }
+
+    public String[] toArray() {
+        /* returns an array representation of the binary tree.
+        You have to use the convention given in COMP ENG 2SI3 for the representation of
+        binary trees using arrays. The first array element stores null. Any array element
+        corresponding to a missing tree node stores null. Any array element corresponding
+        to an internal node stores "I". Any array element corresponding to a leaf stores
+        the string corresponding to that leaf. */
+        int size = (int) Math.pow(2, treeHeight(root)); // size of array is 2^height
+        String[] BinTreeArray = new String[size];
+        BinTreeArray[0] = null;
+        toArrayTraversal(root, BinTreeArray, 1); // 0th element null
+        return BinTreeArray;
+    }
+
+    private void toArrayTraversal(TNode current, String[] BinTreeArray, int index) {
+        /* preorder traversal modifying array of tree from input tree root
+         * Wrapped by toArray()
+         */
+        if (current != null) {
+            if (current.data == null) { // internal node
+                BinTreeArray[index] = "I";
+
+                toArrayTraversal(current.left, BinTreeArray, 2*index);
+                toArrayTraversal(current.right, BinTreeArray, 2*index + 1);
+            }
+            else { // leaf node
+                BinTreeArray[index] = current.data;
+            }
+        }
+    }
+
+    public String encode(ArrayList<String> a) {
+        /* The input list a represents a
+        sequence of alphabet symbols. Each list item is a String object representing a
+        symbol, i.e., a string consisting of letter ’c’ followed by a number that is at most
+        equal to n-1, where n is the number of leaf nodes. This method encodes the input
+        and outputs the corresponding bitstream. You may assume that each string in the
+        list is a valid alphabet symbol. */
+
+        String bitStream = "";
+        for (String symbol : a) {
+            int index = Integer.parseInt(symbol.substring(1)); // get index of symbol
+            if (index >= getCodewords().size()) { // index out of bounds
+                throw new IllegalArgumentException("Invalid argument!");
+            }
+            String codeWord = getCodewords().get(index); // get codeword of symbol
+            bitStream += codeWord;
+        }
+        return bitStream;
+    }
+
+    public String toString() {
+        /* - returns the string representation of the prefix-free
+        code as the sequence of codewords in lexicographical order separated by empty
+        spaces and ending with an empty space. For our example, this string is “0 10 110
+        111 ”. */
+        String BinTreeString = "";
+        ArrayList<String> codeWordsArray = getCodewords();
+        for (String codeWord : codeWordsArray) {
+            BinTreeString += codeWord + " ";
+        }
+        return BinTreeString;
     }
 
     public void printTree() {
