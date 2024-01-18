@@ -1,6 +1,5 @@
 package bintreecompressor;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class BinTree {
@@ -65,7 +64,29 @@ public class BinTree {
         removing some bits, while the prefix-free condition is maintained. This method
         checks if the tree is full and if it is not, it performs these changes (i.e., it reduced
         codewords and adapts the tree) until the tree becomes full. */
-        return;
+        optimizeTraversal(root);
+    }
+
+    private TNode optimizeTraversal(TNode current) {
+        if (current != null) {
+            if (current.left != null)
+                current.left = optimizeTraversal(current.left);
+            if (current.right != null)
+                current.right = optimizeTraversal(current.right);
+            
+            if (current.left == null && current.right != null) {
+                // no right child
+                current.data = current.right.data;
+                return current.right;
+            }
+
+            if (current.left != null && current.right == null) {
+                // no left child
+                current.data = current.left.data;
+                return current.left;
+            }
+        }
+        return current;
     }
 
     public ArrayList<String> getCodewords() {
@@ -127,7 +148,7 @@ public class BinTree {
     }
 
     private void toArrayTraversal(TNode current, String[] BinTreeArray, int index) {
-        /* preorder traversal modifying array of tree from input tree root
+        /* level order traversal modifying array of tree from input tree root
          * Wrapped by toArray()
          */
         if (current != null) {
@@ -151,16 +172,86 @@ public class BinTree {
         and outputs the corresponding bitstream. You may assume that each string in the
         list is a valid alphabet symbol. */
 
+        if (a.size() == 0) { // empty array
+            throw new IllegalArgumentException("Invalid argument!");
+        }
+        if (a.get(0).length() == 0) { // empty string
+            throw new IllegalArgumentException("Invalid argument!");
+        }
+        
         String bitStream = "";
+        ArrayList<String> codeWordsArray = getCodewords();
+        int n = codeWordsArray.size();
         for (String symbol : a) {
-            int index = Integer.parseInt(symbol.substring(1)); // get index of symbol
-            if (index >= getCodewords().size()) { // index out of bounds
+            if (symbol.charAt(0) != 'c') { // invalid character
                 throw new IllegalArgumentException("Invalid argument!");
             }
-            String codeWord = getCodewords().get(index); // get codeword of symbol
+            int index = strToInt(symbol.substring(1)); // get index of symbol
+            if (index >= n) { // index out of bounds
+                throw new IllegalArgumentException("Invalid argument!");
+            }
+            try{
+                codeWordsArray.get(index);
+            } catch (IndexOutOfBoundsException e) {
+                throw new IllegalArgumentException("Invalid argument!");
+            }
+            String codeWord = codeWordsArray.get(index); // get codeword of symbol
             bitStream += codeWord;
         }
         return bitStream;
+    }
+
+    private int strToInt(String str) {
+        if (str == null || str.length() == 0) {
+            throw new IllegalArgumentException("Invalid argument!");
+        }
+        // make sure its actually a number 
+        for (int i = 0; i < str.length(); i++) {
+            if (str.charAt(i) < '0' || str.charAt(i) > '9') { // not a number
+                throw new IllegalArgumentException("Invalid argument!");
+            }
+        }
+        int i = 0;
+        int num = 0;
+        // boolean isNeg = false;
+
+        if (str.charAt(0) == '-') {
+            throw new IllegalArgumentException("Invalid argument!");
+        }
+
+        // Process each character of the string;
+        while (i < str.length()) {
+            num *= 10;
+            num += str.charAt(i++) - '0'; // Minus the ASCII code of '0' to get the value of the charAt(i++).
+        }
+
+        // if (isNeg)
+        //     num = -num;
+
+        return num;
+    }
+
+    public ArrayList<String> decode(String s) throws IllegalArgumentException {
+        TNode current = root;
+        ArrayList<String> DecodedOutput = new ArrayList<String>();
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == '0') {
+                if (current.left != null) {
+                    current = current.left;
+                }
+            }
+            else if (s.charAt(i) == '1') {
+                if (current.right != null) {
+                    current = current.right;
+                }
+            }
+            else { throw new IllegalArgumentException("Illegal Argument!"); }
+
+            if (current.left != null && current.right != null) {
+                DecodedOutput.add(current.data);
+            }
+        }
+        return DecodedOutput;
     }
 
     public String toString() {
