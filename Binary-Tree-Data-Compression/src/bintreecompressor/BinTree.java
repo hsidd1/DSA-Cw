@@ -2,6 +2,8 @@ package bintreecompressor;
 
 import java.util.ArrayList;
 
+import org.w3c.dom.Node;
+
 public class BinTree {
     private TNode root;
 
@@ -64,30 +66,34 @@ public class BinTree {
         removing some bits, while the prefix-free condition is maintained. This method
         checks if the tree is full and if it is not, it performs these changes (i.e., it reduced
         codewords and adapts the tree) until the tree becomes full. */
-        optimizeTraversal(root);
+        root = optimizeTraversal(root);
+        if (root.data != null) {
+            root.data = null;
+            root.left = new TNode("0", null, null);
+        }
     }
 
     private TNode optimizeTraversal(TNode current) {
-        if (current != null) {
-            if (current.left != null)
-                current.left = optimizeTraversal(current.left);
-            if (current.right != null)
-                current.right = optimizeTraversal(current.right);
-            
-            if (current.left == null && current.right != null) {
-                // no right child
-                current.data = current.right.data;
-                return current.right;
-            }
-
-            if (current.left != null && current.right == null) {
-                // no left child
-                current.data = current.left.data;
-                return current.left;
-            }
+        if (current == null) {
+            return null;
         }
+        
+        current.left = optimizeTraversal(current.left);
+        current.right = optimizeTraversal(current.right);
+        
+        if (current.left == null && current.right != null) {
+            //current.data = current.right.data;
+            return current.right;
+        }
+
+        if (current.left != null && current.right == null) {
+            //current.data = current.left.data;
+            return current.left;
+        }
+
         return current;
     }
+        
 
     public ArrayList<String> getCodewords() {
         /* returns an ArrayList<String> object that stores the codewords in lexicographical order1. 
@@ -133,6 +139,11 @@ public class BinTree {
         return 1 + Math.max(treeHeight(current.left), treeHeight(current.right));
     }
 
+    public int getTreeHeight() {
+        /* getter for treeHeight (height of the tree) */
+        return treeHeight(root);
+    }
+
     public String[] toArray() {
         /* returns an array representation of the binary tree.
         You have to use the convention given in COMP ENG 2SI3 for the representation of
@@ -175,81 +186,100 @@ public class BinTree {
         if (a.size() == 0) { // empty array
             throw new IllegalArgumentException("Invalid argument!");
         }
-        if (a.get(0).length() == 0) { // empty string
-            throw new IllegalArgumentException("Invalid argument!");
-        }
         
-        String bitStream = "";
-        ArrayList<String> codeWordsArray = getCodewords();
-        int n = codeWordsArray.size();
+        String encodedString = "";
         for (String symbol : a) {
-            if (symbol.charAt(0) != 'c') { // invalid character
+            String nextSymbol = encodedSymbol(root, symbol, "");
+            if (nextSymbol == null) {
                 throw new IllegalArgumentException("Invalid argument!");
             }
-            int index = strToInt(symbol.substring(1)); // get index of symbol
-            if (index >= n) { // index out of bounds
-                throw new IllegalArgumentException("Invalid argument!");
-            }
-            try{
-                codeWordsArray.get(index);
-            } catch (IndexOutOfBoundsException e) {
-                throw new IllegalArgumentException("Invalid argument!");
-            }
-            String codeWord = codeWordsArray.get(index); // get codeword of symbol
-            bitStream += codeWord;
+            encodedString += nextSymbol;
         }
-        return bitStream;
+        return encodedString;
     }
 
-    private int strToInt(String str) {
-        if (str == null || str.length() == 0) {
-            throw new IllegalArgumentException("Invalid argument!");
-        }
-        // make sure its actually a number 
-        for (int i = 0; i < str.length(); i++) {
-            if (str.charAt(i) < '0' || str.charAt(i) > '9') { // not a number
-                throw new IllegalArgumentException("Invalid argument!");
+    private String encodedSymbol(TNode current, String symbol, String codeWordString) {
+        /* inorder traversal modifying array of codewords from input tree root
+         * Wrapped by encode()
+         */
+        if (current == null) return null;
+
+        if (current.data != null) { // add codeword if leaf
+            if (current.data.equals(symbol)) {
+                return codeWordString;
             }
         }
-        int i = 0;
-        int num = 0;
-        // boolean isNeg = false;
 
-        if (str.charAt(0) == '-') {
-            throw new IllegalArgumentException("Invalid argument!");
-        }
+        String ret = encodedSymbol(current.left, symbol, codeWordString + "0");
+        if (ret != null) return ret;
 
-        // Process each character of the string;
-        while (i < str.length()) {
-            num *= 10;
-            num += str.charAt(i++) - '0'; // Minus the ASCII code of '0' to get the value of the charAt(i++).
-        }
 
-        // if (isNeg)
-        //     num = -num;
+        String ret2 = encodedSymbol(current.right, symbol, codeWordString + "1");
+        if (ret2 != null) return ret2;
 
-        return num;
+        return null;
     }
+
+    // private int strToInt(String str) {
+    //     if (str == null || str.length() == 0) {
+    //         throw new IllegalArgumentException("Invalid argument!");
+    //     }
+    //     // make sure its actually a number 
+    //     for (int i = 0; i < str.length(); i++) {
+    //         if (str.charAt(i) < '0' || str.charAt(i) > '9') { // not a number
+    //             throw new IllegalArgumentException("Invalid argument!");
+    //         }
+    //     }
+    //     int i = 0;
+    //     int num = 0;
+    //     // boolean isNeg = false;
+
+    //     if (str.charAt(0) == '-') {
+    //         throw new IllegalArgumentException("Invalid argument!");
+    //     }
+
+    //     // Process each character of the string;
+    //     while (i < str.length()) {
+    //         num *= 10;
+    //         num += str.charAt(i++) - '0'; // Minus the ASCII code of '0' to get the value of the charAt(i++).
+    //     }
+
+    //     // if (isNeg)
+    //     //     num = -num;
+
+    //     return num;
+    // }
 
     public ArrayList<String> decode(String s) throws IllegalArgumentException {
+        // validation of input 
+        if (s == null || s.length() == 0) {
+            throw new IllegalArgumentException("Invalid argument!");
+        }
+
         TNode current = root;
         ArrayList<String> DecodedOutput = new ArrayList<String>();
         for (int i = 0; i < s.length(); i++) {
             if (s.charAt(i) == '0') {
-                if (current.left != null) {
-                    current = current.left;
+                if (current.left == null) {
+                    throw new IllegalArgumentException("Illegal Argument!");
                 }
+                current = current.left;
             }
             else if (s.charAt(i) == '1') {
-                if (current.right != null) {
-                    current = current.right;
+                if (current.right == null) {
+                    throw new IllegalArgumentException("Illegal Argument!");
                 }
+                current = current.right;
             }
             else { throw new IllegalArgumentException("Illegal Argument!"); }
 
-            if (current.left != null && current.right != null) {
+            if (current.left == null && current.right == null) {
                 DecodedOutput.add(current.data);
+                current = root;
             }
+        }
+        if (current != root) {
+            throw new IllegalArgumentException("Illegal Argument!");
         }
         return DecodedOutput;
     }
