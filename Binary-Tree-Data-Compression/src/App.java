@@ -6,6 +6,7 @@ import bintreecompressor.BinTree;
 public class App {
     public static void main(String[] args) throws Exception {
         Tests();
+        Test_optimize();
 }
 
     private static void Test_optimize() {
